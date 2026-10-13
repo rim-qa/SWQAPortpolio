@@ -39,3 +39,6 @@ next-env.d.ts
 가져온앱
 받은자료/
 받은자료
+
+# CSV files
+*.csv
