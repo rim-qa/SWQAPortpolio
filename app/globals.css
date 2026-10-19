@@ -1,1 +1,64 @@
 @import "tailwindcss";
+
+@font-face {
+  font-family: 'Ownglyph_corncorn-Rg';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2412-1@1.0/Ownglyph_corncorn-Rg.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'OngleipKonkon';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/2412-1@1.0/Ownglyph_corncorn-Rg.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --font-family-main: 'Ownglyph_corncorn-Rg', 'OngleipKonkon', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+::selection {
+  background-color: #E9D5FF;
+  color: #581C87;
+}
+
+html,
+body,
+button,
+input,
+select,
+textarea,
+p,
+span,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+label,
+table,
+th,
+td,
+div {
+  font-family: var(--font-family-main) !important;
+}
+
+/* Pastel Lavender theme smooth scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: #F5EEFD;
+}
+::-webkit-scrollbar-thumb {
+  background: #D8B4FE;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #C084FC;
+}

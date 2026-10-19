@@ -13,6 +13,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="ko">
+      <head>
+        <link rel="preconnect" href="https://cdn.jsdelivr.net" crossOrigin="anonymous" />
+      </head>
       <body className="antialiased text-slate-800 bg-slate-50 min-h-screen">
         {children}
       </body>
