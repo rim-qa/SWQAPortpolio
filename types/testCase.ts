@@ -7,7 +7,7 @@ export interface TestCase {
   category: string; // 대분류
   featureName: string; // 기능명
   testItem: string; // 테스트 항목
-  type: 'Positive' | 'Negative' | 'Exception'; // TC 유형
+  type: 'Positive' | 'Negative' | 'Boundary' | 'Exception'; // TC 유형
   preconditions: string; // 사전조건
   steps: string; // 재현 절차
   expected: string; // 기대 결과

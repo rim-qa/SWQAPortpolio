@@ -1,4 +1,4 @@
-import { TestCase, TCPriority } from '@/types/testCase';
+import { TestCase, TCPriority, TCStatus } from '@/types/testCase';
 
 export interface RawRequirementRow {
   '요구사항 ID'?: string;
@@ -30,6 +30,10 @@ export function generateTestCasesFromRequirements(rows: RawRequirementRow[]): Te
     else if (['Recommend', '권장', '개선'].includes(rawPriority)) basePriority = 'Recommend';
     else basePriority = 'Major';
 
+    const isRecommend = basePriority === 'Recommend';
+    const initStatus: TCStatus = isRecommend ? 'Recommend' : 'Pending';
+    const initActual = isRecommend ? '개선 제안 사항 (테스트 검증 완료 및 개선 권장)' : '';
+
     // 1. Positive Test Case (정상 동작)
     testCases.push({
       id: `TC-${String(tcIndex++).padStart(3, '0')}`,
@@ -41,8 +45,8 @@ export function generateTestCasesFromRequirements(rows: RawRequirementRow[]): Te
       preconditions: `사용자가 [${category}] 관련 메뉴에 진입하여 정상 인증 및 접근 권한을 보유한 상태`,
       steps: `1. ${featureName} 메뉴/버튼을 선택한다.\n2. 유효한 입력값을 입력하거나 요청을 트리거한다.\n3. 수행 결과를 확인한다.`,
       expected: `정상 처리 메시지/토스트가 표시되고 요청 결과가 반영되며 시스템 상태가 정상 갱신되어야 함.`,
-      actual: '',
-      status: 'Pending',
+      actual: initActual,
+      status: initStatus,
       priority: basePriority,
     });
 

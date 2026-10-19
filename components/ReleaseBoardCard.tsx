@@ -62,11 +62,11 @@ export default function ReleaseBoardCard({
   const totalMinor = tcList.filter((tc) => tc.priority === 'Minor').length;
   const totalRecommend = tcList.filter((tc) => tc.priority === 'Recommend').length;
 
-  // PRD 공식: ((PASS + Fail + Blocker count) / Total TC count) * 100
-  const executedCount = passCount + failCount + blockerCount;
+  // 실행 완료 건수: PASS + Fail + Blocker + Recommend (테스트 검증 완료 및 개선 제안 분류)
+  const executedCount = passCount + failCount + blockerCount + recommendCount;
   const progressPercent = totalCount > 0 ? Math.round((executedCount / totalCount) * 100) : 0;
   
-  // 합격률
+  // 합격률 (PASS 건수 / 실제 기능 판정 완료 대상)
   const passRate = executedCount > 0 ? Math.round((passCount / executedCount) * 100) : 0;
 
   /**
@@ -113,6 +113,17 @@ export default function ReleaseBoardCard({
       };
     }
     if (progressPercent === 100) {
+      // [요구사항 반영] Recommend만 있고 PASS가 부족한 경우 (최소 2개의 검증 통과(PASS) 필수)
+      if (passCount < 2) {
+        return {
+          status: 'HOLD / PASS REQUIRED',
+          title: '⚠️ PASS 테스트케이스 최소 2개 필요 (릴리즈 보류)',
+          description: `현재 개선사항(Recommend) ${recommendCount}건만 등록/완료되어 실제 핵심 기능의 정상 동작 검증(PASS)이 부족합니다. 안전한 릴리즈 승인을 위해 최소 2개 이상의 PASS 테스트케이스가 필요합니다.`,
+          badgeColor: 'bg-amber-500 text-white font-extrabold shadow-xs',
+          textColor: 'text-amber-800',
+        };
+      }
+
       return {
         status: 'PASS',
         title: '🎉 릴리즈 승인 완료 (Release Ready)',
@@ -140,7 +151,7 @@ export default function ReleaseBoardCard({
     const summaryText = `[Q-Safe 릴리즈 현황 보고서]
 • 최종 의사결정: ${decision.status} - ${decision.title}
 • 전체 테스트 진행률: ${progressPercent}% (${executedCount}/${totalCount} 실행 완료)
-• 실행 결과: PASS ${passCount}건 (합격률 ${passRate}%), Fail ${failCount}건, Blocker ${blockerCount}건, Pending ${pendingCount}건, N/A ${naCount}건
+• 실행 결과: PASS ${passCount}건 (합격률 ${passRate}%), Fail ${failCount}건, Blocker ${blockerCount}건, Recommend ${recommendCount}건, Pending ${pendingCount}건, N/A ${naCount}건
 • 결함 우선순위 현황: Critical ${criticalCount}건, Major ${majorCount}건, Minor ${minorCount}건, Recommend ${recommendCount}건
 • 상세 내용: ${decision.description}`;
 
@@ -314,7 +325,7 @@ export default function ReleaseBoardCard({
         <div className={`p-4 rounded-xl border transition-all ${
           isCriticalEmergency 
             ? 'bg-red-50/70 border-red-300 ring-1 ring-red-300' 
-            : decision.status.includes('WARNING')
+            : decision.status.includes('WARNING') || decision.status.includes('HOLD')
             ? 'bg-amber-50/70 border-amber-300 ring-1 ring-amber-300'
             : decision.status === 'PASS'
             ? 'bg-emerald-50 border-emerald-300'
@@ -401,7 +412,7 @@ export default function ReleaseBoardCard({
               }`} />
               전체 테스트 진행률
               <span className="text-[11px] text-slate-400 font-normal">
-                ((P+F+B)/Total)
+                ((P+F+B+R)/Total)
               </span>
             </span>
             <span className={`text-xl md:text-2xl font-black ${
@@ -499,7 +510,7 @@ export default function ReleaseBoardCard({
               {categories.map((cat) => {
                 const catTcs = tcList.filter((t) => t.category === cat);
                 const catTotal = catTcs.length;
-                const catDone = catTcs.filter((t) => ['PASS', 'Fail', 'Blocker'].includes(t.status)).length;
+                const catDone = catTcs.filter((t) => ['PASS', 'Fail', 'Blocker', 'Recommend'].includes(t.status)).length;
                 const catBlocked = catTcs.some((t) => t.status === 'Blocker');
                 const catPct = catTotal > 0 ? Math.round((catDone / catTotal) * 100) : 0;
 
