@@ -42,3 +42,5 @@ next-env.d.ts
 
 # CSV files
 *.csv
+
+.vercel
