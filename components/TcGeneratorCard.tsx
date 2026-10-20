@@ -88,6 +88,8 @@ export default function TcGeneratorCard({
   const [isExpandedAll, setIsExpandedAll] = useState<boolean>(false);
   // 행별 개별 펼치기 상태
   const [expandedRowIds, setExpandedRowIds] = useState<Set<string>>(new Set());
+  // 뷰 모드: 방안 1 - 'compact' (빠른 실행 뷰 - 한눈에 보기) vs 'full' (기존 10개 전체 컬럼 뷰)
+  const [tableViewMode, setTableViewMode] = useState<'compact' | 'full'>('compact');
 
   const toggleRowExpand = (id: string) => {
     const next = new Set(expandedRowIds);
@@ -1183,28 +1185,88 @@ export default function TcGeneratorCard({
           </div>
         </div>
 
-        {/* 보기 모드 토글 & 통합 검색창 */}
+        {/* 보기 모드 전환 & 통합 검색창 */}
         <div className="flex items-center gap-2 flex-wrap">
-          {/* 전체 절차/기대결과 펼치기/접기 토글 버튼 */}
-          <button
-            type="button"
-            disabled={tcList.length === 0}
-            onClick={() => setIsExpandedAll(!isExpandedAll)}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 border border-[#DDD0F5] bg-white text-[#6F5E82] hover:text-[#2E1A47] hover:bg-[#F3ECFB] rounded-xl font-bold text-xs disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer shadow-2xs"
-            title={tcList.length === 0 ? '등록된 테스트 케이스가 없어 비활성화되었습니다' : '재현절차와 기대결과를 전체 펼치거나 요약형(2줄)으로 접습니다'}
-          >
-            {isExpandedAll ? (
-              <>
-                <Minimize2 className="w-3.5 h-3.5 text-[#8B5CF6]" />
-                <span>컴팩트 요약 뷰</span>
-              </>
-            ) : (
-              <>
-                <Maximize2 className="w-3.5 h-3.5 text-[#8B5CF6]" />
-                <span>상세 전체 펼치기</span>
-              </>
-            )}
-          </button>
+          {/* 방안 1: 뷰 모드 탭 (빠른 실행 뷰 vs 10개 전체 컬럼 뷰) */}
+          <div className="inline-flex items-center bg-[#F3ECFB] p-0.5 rounded-xl border border-[#DDD0F5] shadow-2xs">
+            <button
+              type="button"
+              onClick={() => setTableViewMode('compact')}
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold text-xs transition-all cursor-pointer ${
+                tableViewMode === 'compact'
+                  ? 'bg-white text-[#7C3AED] shadow-xs'
+                  : 'text-[#7B6891] hover:text-[#2E1A47]'
+              }`}
+              title="가로 스크롤 없이 한눈에 보고 빠르게 테스트를 실행하는 뷰"
+            >
+              <Zap className="w-3.5 h-3.5 text-[#8B5CF6]" />
+              <span>빠른 실행 뷰</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setTableViewMode('full')}
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg font-bold text-xs transition-all cursor-pointer ${
+                tableViewMode === 'full'
+                  ? 'bg-white text-[#7C3AED] shadow-xs'
+                  : 'text-[#7B6891] hover:text-[#2E1A47]'
+              }`}
+              title="사전조건, 재현절차, 기대결과 등 10개 컬럼 전체를 확인하는 상세 뷰"
+            >
+              <span>전체 컬럼 뷰</span>
+            </button>
+          </div>
+
+          {/* 전체 컬럼 뷰일 때: 텍스트 요약(2줄) / 전체 펼치기 토글 */}
+          {tableViewMode === 'full' && (
+            <button
+              type="button"
+              disabled={tcList.length === 0}
+              onClick={() => setIsExpandedAll(!isExpandedAll)}
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 border border-[#DDD0F5] bg-white text-[#6F5E82] hover:text-[#2E1A47] hover:bg-[#F3ECFB] rounded-xl font-bold text-xs disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer shadow-2xs"
+              title={tcList.length === 0 ? '등록된 테스트 케이스가 없어 비활성화되었습니다' : '재현절차와 기대결과를 전체 펼치거나 요약형(2줄)으로 접습니다'}
+            >
+              {isExpandedAll ? (
+                <>
+                  <Minimize2 className="w-3.5 h-3.5 text-[#8B5CF6]" />
+                  <span>요약(2줄) 접기</span>
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="w-3.5 h-3.5 text-[#8B5CF6]" />
+                  <span>전체 펼치기</span>
+                </>
+              )}
+            </button>
+          )}
+
+          {/* 빠른 실행 뷰일 때: 전체 세부내용 한 번에 펼치기/접기 */}
+          {tableViewMode === 'compact' && (
+            <button
+              type="button"
+              disabled={tcList.length === 0}
+              onClick={() => {
+                if (expandedRowIds.size === filteredList.length && filteredList.length > 0) {
+                  setExpandedRowIds(new Set());
+                } else {
+                  setExpandedRowIds(new Set(filteredList.map((t) => t.id)));
+                }
+              }}
+              className="inline-flex items-center gap-1 px-2.5 py-1 sm:px-3 sm:py-1.5 border border-[#DDD0F5] bg-white text-[#6F5E82] hover:text-[#2E1A47] hover:bg-[#F3ECFB] rounded-xl font-bold text-xs disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer shadow-2xs"
+              title="모든 TC의 세부내용(사전조건, 절차, 기대결과)을 한 번에 펼치거나 접습니다"
+            >
+              {expandedRowIds.size === filteredList.length && filteredList.length > 0 ? (
+                <>
+                  <Minimize2 className="w-3.5 h-3.5 text-[#8B5CF6]" />
+                  <span>세부 접기</span>
+                </>
+              ) : (
+                <>
+                  <Maximize2 className="w-3.5 h-3.5 text-[#8B5CF6]" />
+                  <span>세부 펼치기</span>
+                </>
+              )}
+            </button>
+          )}
 
           {/* 통합 검색창 */}
           <div className="relative">
@@ -1250,7 +1312,294 @@ export default function TcGeneratorCard({
                 상단의 <strong>[샘플 요구사항 CSV 자동 로드]</strong>에서 20개 또는 48개 빠른 샘플을 불러와보세요.
               </p>
             </div>
+          ) : tableViewMode === 'compact' ? (
+            /* [방안 1: 컴팩트 빠른 실행 뷰] 가로 스크롤 없이 핵심 정보(테스트 항목, 상태, 결함 우선순위, Action)를 한눈에 확인 */
+            <table className="w-full text-left border-collapse text-xs">
+              <thead className="bg-[#F6EFFC] sticky top-0 z-20 border-b border-[#EBDFF8] text-[#5B3D7E] font-bold text-[11px] tracking-wider shadow-2xs">
+                <tr>
+                  <th className="py-2.5 px-2 w-10 text-center">
+                    <input
+                      type="checkbox"
+                      checked={isAllSelected}
+                      onChange={(e) => handleToggleSelectAll(e.target.checked)}
+                      className="cursor-pointer rounded border-[#DDD0F5] text-[#8B5CF6] focus:ring-[#8B5CF6]"
+                    />
+                  </th>
+                  <th className="py-2.5 px-2 w-16 text-center">TC-ID</th>
+                  <th className="py-2.5 px-3 min-w-[200px]">테스트 항목 &amp; 분류</th>
+                  <th className="py-2.5 px-2 w-24 text-center">상태</th>
+                  <th className="py-2.5 px-2 w-28 text-center">결함 우선순위</th>
+                  <th className="py-2.5 px-2.5 min-w-[220px] text-center sticky right-0 bg-[#F1E7F8] shadow-l z-20">
+                    실행 Action / 관리
+                  </th>
+                  <th className="py-2.5 px-2 w-14 text-center">세부</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#F2EAFD]">
+                {filteredList.map((tc) => {
+                  const isChecked = selectedIds.has(tc.id);
+                  const isBlockedByFail = tc.status === 'Blocker' && tc.actual.includes('Fail에 따른 블로킹');
+                  const isExpanded = expandedRowIds.has(tc.id);
+
+                  return (
+                    <React.Fragment key={tc.id}>
+                      <tr
+                        className={`hover:bg-[#FAF6FE] transition-colors ${
+                          isChecked ? 'bg-[#F3ECFB]/60' : ''
+                        } ${tc.status === 'Blocker' ? 'bg-red-50/70' : ''}`}
+                      >
+                        {/* 체크박스 */}
+                        <td className="py-2.5 px-2 text-center align-middle">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => handleToggleSelectOne(tc.id)}
+                            className="cursor-pointer rounded border-[#DDD0F5] text-[#8B5CF6] focus:ring-[#8B5CF6]"
+                          />
+                        </td>
+
+                        {/* TC-ID (클릭 시 세부 정보 펼침) */}
+                        <td
+                          onClick={() => toggleRowExpand(tc.id)}
+                          className="py-2.5 px-2 font-mono font-medium text-[#2E1A47] text-center whitespace-nowrap align-middle cursor-pointer hover:bg-[#F3ECFB]/60 transition-colors select-none"
+                          title="클릭하여 사전조건, 재현절차, 기대결과 펼치기/접기"
+                        >
+                          <span className="font-bold text-[#2E1A47] hover:text-[#7C3AED] transition-colors">{tc.id}</span>
+                          <span className="block text-[10px] text-[#AFA1BF] font-sans">{tc.reqId}</span>
+                        </td>
+
+                        {/* 테스트 항목 & 분류 (클릭 시 바로 사전조건, 재현절차, 기대결과 펼침) */}
+                        <td
+                          onClick={() => toggleRowExpand(tc.id)}
+                          className="py-2.5 px-3 text-[#2E1A47] align-middle cursor-pointer group hover:bg-[#F3ECFB]/60 transition-colors select-none"
+                          title="클릭하여 사전조건, 재현절차, 기대결과, 실제결과 펼치기/접기"
+                        >
+                          <div className="flex items-center gap-1.5 flex-wrap mb-1">
+                            {getTypeBadge(tc.type)}
+                            <span className="bg-[#F3ECFB] px-1.5 py-0.2 rounded text-[11px] text-[#7C3AED] font-medium border border-[#DDD0F5]">
+                              {tc.category}
+                            </span>
+                            <span className="text-[11px] text-[#7B6891] truncate max-w-[140px] font-medium">
+                              {tc.featureName}
+                            </span>
+                            {isBlockedByFail && (
+                              <span className="inline-flex items-center gap-0.5 px-1 py-0.2 rounded text-[10px] font-bold bg-red-100 text-red-700 border border-red-300">
+                                <Link2 className="w-2.5 h-2.5" /> 연관 Blocker
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-[#2E1A47] font-semibold text-xs leading-snug group-hover:text-[#7C3AED] transition-colors flex items-center justify-between gap-2">
+                            <span>{tc.testItem}</span>
+                            <span className="text-[10px] text-[#8B5CF6] font-medium shrink-0 flex items-center gap-0.5 bg-[#FAF7FD] px-1.5 py-0.5 rounded border border-[#E8DCF7] shadow-2xs">
+                              {isExpanded ? '접기 ▲' : '상세보기 ▼'}
+                            </span>
+                          </div>
+                        </td>
+
+                        {/* 상태 드롭다운 & 배지 */}
+                        <td className="py-2.5 px-2 text-center whitespace-nowrap align-middle">
+                          <div className="flex flex-col items-center gap-1">
+                            {getStatusBadge(tc.status)}
+                            <select
+                              value={tc.status}
+                              onChange={(e) => handleUpdateStatus(tc.id, e.target.value as TCStatus)}
+                              className="text-[11px] border border-[#DDD0F5] rounded-lg px-1 py-0.5 text-[#2E1A47] bg-white cursor-pointer hover:border-[#8B5CF6] disabled:bg-[#FAF7FD] disabled:text-[#AFA1BF] disabled:cursor-not-allowed"
+                            >
+                              <option value="Pending">Pending</option>
+                              <option value="PASS">PASS</option>
+                              <option value="Fail">Fail</option>
+                              <option value="Blocker">Blocker</option>
+                              <option value="Recommend">개선사항</option>
+                              <option value="N/A">N/A</option>
+                            </select>
+                          </div>
+                        </td>
+
+                        {/* 결함 우선순위 */}
+                        <td className="py-2.5 px-2 text-center whitespace-nowrap align-middle">
+                          <div className="flex flex-col items-center gap-1">
+                            {getPriorityBadge(tc.priority, tc.status)}
+                            <select
+                              value={tc.priority}
+                              disabled={tc.status === 'PASS' || tc.status === 'N/A'}
+                              onChange={(e) => handleUpdatePriority(tc.id, e.target.value as TCPriority)}
+                              className="text-[11px] border border-[#DDD0F5] rounded-lg px-1 py-0.5 text-[#2E1A47] bg-white cursor-pointer disabled:bg-[#FAF7FD] disabled:text-[#AFA1BF] disabled:cursor-not-allowed hover:border-[#8B5CF6]"
+                            >
+                              <option value="None">None (면제)</option>
+                              <option value="Critical">Critical</option>
+                              <option value="Major">Major</option>
+                              <option value="Minor">Minor</option>
+                              <option value="Recommend">Recommend</option>
+                            </select>
+                          </div>
+                        </td>
+
+                        {/* 액션 버튼 [PASS], [Fail], [Blocker] + 수정/삭제 */}
+                        <td className="py-2.5 px-2.5 text-center whitespace-nowrap sticky right-0 bg-white/95 backdrop-blur-xs shadow-l align-middle min-w-[220px] z-10">
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              type="button"
+                              disabled={tc.status === 'N/A' || tc.priority === 'Recommend'}
+                              onClick={() => handleUpdateStatus(tc.id, 'PASS')}
+                              className={`inline-flex items-center gap-0.5 px-1.5 py-1 border rounded-lg font-semibold text-[11px] transition-colors ${
+                                tc.status === 'N/A' || tc.priority === 'Recommend'
+                                  ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-50'
+                                  : tc.status === 'PASS'
+                                  ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs cursor-pointer'
+                                  : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-600 hover:text-white border-emerald-300 cursor-pointer'
+                              }`}
+                              title={tc.status === 'N/A' ? '테스트 대상 제외 (N/A)' : tc.priority === 'Recommend' ? '권장 개선 사항 (실행 비활성화)' : 'PASS 처리'}
+                            >
+                              <CheckCircle2 className="w-3.5 h-3.5" />
+                              PASS
+                            </button>
+                            <button
+                              type="button"
+                              disabled={tc.status === 'N/A' || tc.priority === 'Recommend'}
+                              onClick={() => handleUpdateStatus(tc.id, 'Fail')}
+                              className={`inline-flex items-center gap-0.5 px-1.5 py-1 border rounded-lg font-semibold text-[11px] transition-colors ${
+                                tc.status === 'N/A' || tc.priority === 'Recommend'
+                                  ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed opacity-50'
+                                  : tc.status === 'Fail'
+                                  ? 'bg-[#D83664] text-white border-[#D83664] shadow-xs cursor-pointer'
+                                  : 'bg-[#FFEBF1] text-[#D83664] hover:bg-[#D83664] hover:text-white border-[#FCD2DF] cursor-pointer'
+                              }`}
+                              title={tc.status === 'N/A' ? '테스트 대상 제외 (N/A)' : tc.priority === 'Recommend' ? '권장 개선 사항 (실행 비활성화)' : 'Fail 처리'}
+                            >
+                              <XCircle className="w-3.5 h-3.5" />
+                              Fail
+                            </button>
+                            <button
+                              type="button"
+                              disabled={tc.status === 'N/A' || tc.priority === 'Recommend'}
+                              onClick={() => handleUpdateStatus(tc.id, 'Blocker')}
+                              className={`inline-flex items-center gap-0.5 px-1.5 py-1 rounded-lg font-semibold text-[11px] shadow-sm transition-colors ${
+                                tc.status === 'N/A' || tc.priority === 'Recommend'
+                                  ? 'bg-slate-200 text-slate-400 cursor-not-allowed opacity-50'
+                                  : tc.status === 'Blocker'
+                                  ? 'bg-rose-800 text-white shadow-xs cursor-pointer'
+                                  : 'bg-rose-50 text-rose-800 hover:bg-rose-800 hover:text-white border border-rose-300 cursor-pointer'
+                              }`}
+                              title={tc.status === 'N/A' ? '테스트 대상 제외 (N/A)' : tc.priority === 'Recommend' ? '권장 개선 사항 (실행 비활성화)' : 'Blocker 처리'}
+                            >
+                              <AlertOctagon className="w-3.5 h-3.5" />
+                              Blocker
+                            </button>
+
+                            {/* 수정 & 삭제 */}
+                            <div className="flex items-center gap-0.5 ml-1 border-l border-[#EADBF8] pl-1">
+                              <button
+                                type="button"
+                                onClick={() => setEditingTc(tc)}
+                                className="p-1 text-[#AFA1BF] hover:text-[#8B5CF6] hover:bg-[#F3ECFB] rounded-lg cursor-pointer"
+                                title="수정"
+                              >
+                                <Edit className="w-3.5 h-3.5" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDeleteSingle(tc.id)}
+                                className="p-1 text-[#AFA1BF] hover:text-rose-600 hover:bg-rose-50 rounded-lg cursor-pointer"
+                                title="삭제"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* 세부 보기 아코디언 토글 버튼 */}
+                        <td className="py-2.5 px-2 text-center align-middle whitespace-nowrap">
+                          <button
+                            type="button"
+                            onClick={() => toggleRowExpand(tc.id)}
+                            className={`p-1.5 rounded-lg border text-xs transition-colors cursor-pointer ${
+                              isExpanded
+                                ? 'bg-[#7C3AED] text-white border-[#7C3AED]'
+                                : 'bg-[#F3ECFB] text-[#7C3AED] hover:bg-[#EBDDF9] border-[#DDD0F5]'
+                            }`}
+                            title={isExpanded ? '세부내용 접기' : '사전조건, 절차, 기대결과 펼치기'}
+                          >
+                            <ChevronDown className={`w-3.5 h-3.5 transition-transform ${isExpanded ? 'rotate-180' : ''}`} />
+                          </button>
+                        </td>
+                      </tr>
+
+                      {/* 세부내용 아코디언 서브 패널 */}
+                      {isExpanded && (
+                        <tr className="bg-[#FAF7FD] border-b border-[#ECE0F9]">
+                          <td colSpan={7} className="px-4 py-3">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                              <div className="bg-white p-3 rounded-2xl border border-[#EBDDF9] shadow-2xs">
+                                <span className="font-bold text-[#7C3AED] text-xs flex items-center gap-1 mb-1">
+                                  <span>📌 사전조건</span>
+                                </span>
+                                <p className="text-[#6F5E82] leading-relaxed whitespace-pre-line">
+                                  {tc.preconditions || '(사전조건 없음)'}
+                                </p>
+                              </div>
+                              <div className="bg-white p-3 rounded-2xl border border-[#EBDDF9] shadow-2xs">
+                                <span className="font-bold text-[#7C3AED] text-xs flex items-center gap-1 mb-1">
+                                  <span>🔢 재현 절차</span>
+                                </span>
+                                <p className="text-[#6F5E82] font-mono text-[11px] leading-relaxed whitespace-pre-line">
+                                  {tc.steps || '(절차 없음)'}
+                                </p>
+                              </div>
+                              <div className="bg-white p-3 rounded-2xl border border-[#EBDDF9] shadow-2xs">
+                                <span className="font-bold text-[#7C3AED] text-xs flex items-center gap-1 mb-1">
+                                  <span>🎯 기대 결과</span>
+                                </span>
+                                <p className="text-[#6F5E82] leading-relaxed whitespace-pre-line mb-2">
+                                  {tc.expected}
+                                </p>
+                                <div className="pt-2 border-t border-[#F2EAFD]">
+                                  <span className="font-bold text-[#5B3D7E] text-[11px] block mb-1">
+                                    실제 결과 (입력 및 자동 판정)
+                                  </span>
+                                  <input
+                                    type="text"
+                                    value={tc.actual}
+                                    placeholder="결과 입력 시 상태 자동 판정"
+                                    onChange={(e) => handleUpdateActualWithAutoStatus(tc.id, e.target.value)}
+                                    className="w-full px-2 py-1 text-xs border border-[#DDD0F5] rounded-lg focus:ring-1 focus:ring-[#8B5CF6] focus:outline-none bg-[#FAF7FD]"
+                                  />
+                                  <div className="flex gap-1 flex-wrap mt-1">
+                                    <button
+                                      type="button"
+                                      onClick={() => handleUpdateActualWithAutoStatus(tc.id, '기대 결과와 일치함 (정상)')}
+                                      className="text-[10px] bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 px-1 py-0.5 rounded font-medium cursor-pointer"
+                                    >
+                                      +일치(PASS)
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleUpdateActualWithAutoStatus(tc.id, '기대 결과 불일치: 기능 오동작')}
+                                      className="text-[10px] bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-1 py-0.5 rounded font-medium cursor-pointer"
+                                    >
+                                      +오동작(Fail)
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleUpdateActualWithAutoStatus(tc.id, '치명적 결함 발생: 500 에러')}
+                                      className="text-[10px] bg-purple-50 hover:bg-purple-100 text-[#7C3AED] border border-[#DDD0F5] px-1 py-0.5 rounded font-medium cursor-pointer"
+                                    >
+                                      +에러(Block)
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </tbody>
+            </table>
           ) : (
+            /* [기존 10개 전체 컬럼 뷰] 기존 컬럼, 스타일, 동작 100% 그대로 유지 */
             <table className="w-full text-left border-collapse text-xs">
               {/* 고정 헤더: 스크롤해도 상단에 sticky 고정 */}
               <thead className="bg-[#F6EFFC] sticky top-0 z-20 border-b border-[#EBDFF8] text-[#5B3D7E] font-bold text-[11px] tracking-wider shadow-2xs">

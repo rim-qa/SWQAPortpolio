@@ -40,5 +40,12 @@ next-env.d.ts
 받은자료/
 받은자료
 
+# Presentation & Memo files (Excluded from repository)
+*.pptx
+~$*.pptx
+발표재료*
+*수료발표*
+*발표서식*
+
 
 .vercel
