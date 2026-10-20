@@ -40,7 +40,5 @@ next-env.d.ts
 받은자료/
 받은자료
 
-# CSV files
-*.csv
 
 .vercel

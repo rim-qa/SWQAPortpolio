@@ -96,13 +96,16 @@ export default function TcGeneratorCard({
     setExpandedRowIds(next);
   };
 
-  // 샘플 데이터 CSV 로드 핸들러 (10~99개 TC 샘플 지원)
+  // 샘플 데이터 CSV 로드 핸들러 (정적 CSV 파일 로드)
   const handleLoadSample = async (sampleType: string, label: string) => {
+    const filePath = `/samples/${sampleType.toLowerCase()}.csv`;
     try {
       setIsParsing(true);
       setShowSampleDropdown(false);
-      const res = await fetch(`/api/sample-csv?file=${sampleType}`);
-      if (!res.ok) throw new Error('샘플 파일을 불러오지 못했습니다.');
+      const res = await fetch(filePath);
+      if (!res.ok) {
+        throw new Error(`샘플 파일을 불러오지 못했습니다. (경로: ${filePath}, 상태: ${res.status})`);
+      }
       
       const csvText = await res.text();
       setFileName(`${label} (샘플)`);
@@ -120,13 +123,14 @@ export default function TcGeneratorCard({
           }
           setIsParsing(false);
         },
-        error: () => {
-          alert('샘플 파싱 중 오류가 발생했습니다.');
+        error: (parseError: Error) => {
+          alert(`샘플 파싱 중 오류가 발생했습니다: ${parseError.message}`);
           setIsParsing(false);
         },
       });
     } catch (err: unknown) {
-      alert((err as Error).message || '샘플 로드 실패');
+      const msg = (err as Error).message || `샘플 파일을 불러오지 못했습니다. (경로: ${filePath})`;
+      alert(msg);
       setIsParsing(false);
     }
   };
