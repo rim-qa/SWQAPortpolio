@@ -63,7 +63,7 @@ export default function Home() {
   };
 
   return (
-    <div className={`min-h-screen flex flex-col transition-colors duration-200 ${isBlocked && currentView === 'dashboard' ? 'bg-[#FFF0F4]/70' : 'bg-[#F6F1FD]'}`}>
+    <div className={`min-h-screen w-full flex flex-col transition-colors duration-200 overflow-x-hidden ${isBlocked && currentView === 'dashboard' ? 'bg-[#FFF0F4]/70' : 'bg-[#F6F1FD]'}`}>
       {/* 글로벌 상단 헤더 네비게이션 */}
       <header className="border-b bg-white/85 backdrop-blur-md sticky top-0 z-20 border-[#EBDDF9] shadow-xs">
         <div className="max-w-[1700px] mx-auto px-4 py-3 flex items-center justify-between">
@@ -239,11 +239,11 @@ export default function Home() {
           </div>
         )}
 
-        {/* 메인 2분할 레이아웃 (md:grid-cols-2) */}
-        <main className="max-w-[1700px] mx-auto p-4 md:p-6">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-            {/* Card 1: AI TC 자동 생성기 및 실행기 (7 cols) */}
-            <div className="lg:col-span-7">
+        {/* 메인 2분할 레이아웃 (Card 1 ~2/3, Card 2 ~1/3 나란히, 1024px 미만 세로 스택) */}
+        <main className="w-full max-w-[1700px] mx-auto p-3 sm:p-4 md:p-6 overflow-x-hidden">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-6 items-start w-full">
+            {/* Card 1: AI TC 자동 생성기 및 실행기 (약 2/3: 8 cols) */}
+            <div className="w-full lg:col-span-8 min-w-0">
               <TcGeneratorCard
                 tcList={tcList}
                 onUpdateTcList={handleUpdateTcList}
@@ -251,8 +251,8 @@ export default function Home() {
               />
             </div>
 
-            {/* Card 2: 실시간 릴리즈 현황 및 긴급 제어 (5 cols) */}
-            <div className="lg:col-span-5">
+            {/* Card 2: 실시간 릴리즈 현황 및 긴급 제어 (약 1/3: 4 cols) */}
+            <div className="w-full lg:col-span-4 min-w-0">
               <ReleaseBoardCard
                 tcList={tcList}
                 isBlocked={isBlocked}

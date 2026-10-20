@@ -282,25 +282,25 @@ export default function ReleaseBoardCard({
           : 'bg-white border-[#EADBF8]'
       }`}
     >
-      {/* 카드 상단 헤더 */}
+      {/* 카드 상단 헤더 (여백 최적화) */}
       <div
-        className={`p-4 border-b flex flex-wrap items-center justify-between gap-2.5 transition-colors ${
+        className={`px-3.5 py-2.5 sm:px-4 sm:py-3 border-b flex flex-wrap items-center justify-between gap-2 transition-colors ${
           isCriticalEmergency ? 'border-rose-200 bg-rose-100/70' : 'border-[#ECE0F9] bg-gradient-to-r from-[#FAF6FD] to-[#F3ECFB]'
         }`}
       >
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2.5">
           <div
-            className={`p-2.5 rounded-2xl text-white shadow-sm transition-colors ${
+            className={`p-2 sm:p-2.5 rounded-xl sm:rounded-2xl text-white shadow-sm transition-colors ${
               isCriticalEmergency ? 'bg-rose-600 animate-pulse' : 'bg-gradient-to-tr from-[#906FE7] to-[#C4B5FD] shadow-purple-200/50'
             }`}
           >
-            <BarChart3 className="w-5 h-5" />
+            <BarChart3 className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <h2 className="font-bold text-[#2E1A47] text-base md:text-lg flex items-center gap-2">
+            <h2 className="font-bold text-[#2E1A47] text-sm sm:text-base flex items-center gap-2">
               <span>실시간 릴리즈 현황 및 긴급 제어</span>
               <span
-                className={`text-xs px-2.5 py-0.5 rounded-full font-bold transition-colors ${
+                className={`text-[11px] px-2 py-0.5 rounded-full font-bold transition-colors ${
                   isCriticalEmergency
                     ? 'bg-rose-200 text-rose-900'
                     : 'bg-[#F3ECFB] text-[#7C3AED] border border-[#DDD0F5]'
@@ -309,7 +309,7 @@ export default function ReleaseBoardCard({
                 Card 2
               </span>
             </h2>
-            <p className="text-xs text-[#7B6891]">
+            <p className="text-[11px] text-[#7B6891]">
               실시간 릴리즈 판정 • 결함 우선순위 분석 • 공유 리포트 내보내기
             </p>
           </div>

@@ -763,41 +763,41 @@ export default function TcGeneratorCard({
 
   return (
     <div className="bg-white rounded-3xl border border-[#EADBF8] shadow-[0_12px_40px_rgba(180,150,230,0.15)] flex flex-col h-full overflow-hidden">
-      {/* 1. 상단 컨트롤 헤더 */}
-      <div className="p-4 border-b border-[#ECE0F9] bg-gradient-to-r from-[#FAF6FD] to-[#F3ECFB] flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center space-x-3">
-          <div className="p-2.5 bg-gradient-to-tr from-[#906FE7] to-[#C4B5FD] text-white rounded-2xl shadow-sm shadow-purple-200/50">
-            <Sparkles className="w-5 h-5" />
+      {/* 1. 상단 컨트롤 헤더 (첫 화면 테이블 노출을 위해 컴팩트 여백 적용) */}
+      <div className="px-3.5 py-2.5 sm:px-4 sm:py-3 border-b border-[#ECE0F9] bg-gradient-to-r from-[#FAF6FD] to-[#F3ECFB] flex flex-wrap items-center justify-between gap-2.5">
+        <div className="flex items-center space-x-2.5">
+          <div className="p-2 bg-gradient-to-tr from-[#906FE7] to-[#C4B5FD] text-white rounded-xl shadow-xs">
+            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
           <div>
-            <h2 className="font-bold text-[#2E1A47] text-base md:text-lg flex items-center gap-2">
+            <h2 className="font-bold text-[#2E1A47] text-sm sm:text-base flex items-center gap-2">
               <span>AI TC 자동 생성기 &amp; 실행기</span>
-              <span className="text-xs bg-[#F3ECFB] text-[#7C3AED] px-2.5 py-0.5 rounded-full font-bold border border-[#DDD0F5]">
+              <span className="text-[11px] bg-[#F3ECFB] text-[#7C3AED] px-2 py-0.5 rounded-full font-bold border border-[#DDD0F5]">
                 Card 1
               </span>
             </h2>
-            <p className="text-xs text-[#7B6891]">
+            <p className="text-[11px] text-[#7B6891]">
               컴팩트 뷰 제공 • 10~99개 소형 샘플 지원 • 연관 TC Fail 시 자동 Blocker
             </p>
           </div>
         </div>
 
         {/* 파일 업로드 & 샘플 데이터 로드 드롭다운 */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
           <div className="relative">
             <button
               type="button"
               onClick={() => setShowSampleDropdown(!showSampleDropdown)}
               disabled={isParsing}
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-[#7C3AED] bg-[#F3ECFB] hover:bg-[#EBDDF9] border border-[#DDD0F5] rounded-2xl shadow-2xs transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs font-bold text-[#7C3AED] bg-[#F3ECFB] hover:bg-[#EBDDF9] border border-[#DDD0F5] rounded-xl sm:rounded-2xl shadow-2xs transition-colors cursor-pointer"
             >
-              <FileCheck className="w-4 h-4 text-[#8B5CF6]" />
+              <FileCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#8B5CF6]" />
               샘플 요구사항 CSV 자동 로드
               <ChevronDown className="w-3.5 h-3.5" />
             </button>
 
             {showSampleDropdown && (
-              <div className="absolute right-0 mt-1 w-64 bg-white border border-[#EADBF8] rounded-2xl shadow-xl py-1.5 z-30 text-xs animate-in fade-in zoom-in-95">
+              <div className="absolute right-0 mt-1 w-64 max-w-[calc(100vw-2rem)] bg-white border border-[#EADBF8] rounded-2xl shadow-xl py-1.5 z-30 text-xs animate-in fade-in zoom-in-95">
                 {/* 10~99개 빠른 테스트용 소형/중형 샘플 */}
                 <div className="px-3 py-1 font-semibold text-[11px] text-[#7C3AED] uppercase tracking-wider bg-[#F3ECFB]/60 rounded-t-xl">
                   ⚡ 10~99개 규모 (초고속 데모)
@@ -892,10 +892,10 @@ export default function TcGeneratorCard({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isParsing}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs md:text-sm font-bold text-white bg-gradient-to-r from-[#9F7AEA] via-[#8B5CF6] to-[#7C3AED] hover:from-[#906BE0] hover:to-[#6D28D9] rounded-2xl shadow-md shadow-purple-200/60 transition-all cursor-pointer disabled:opacity-50"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-bold text-white bg-gradient-to-r from-[#9F7AEA] via-[#8B5CF6] to-[#7C3AED] hover:from-[#906BE0] hover:to-[#6D28D9] rounded-xl sm:rounded-2xl shadow-md shadow-purple-200/60 transition-all cursor-pointer disabled:opacity-50"
             title="기존 목록을 비우고 새 CSV 파일 내용으로 TC를 생성합니다"
           >
-            <Upload className="w-4 h-4" />
+            <Upload className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
             {isParsing ? '파싱 중...' : '요구사항 CSV 업로드'}
           </button>
 
@@ -907,16 +907,16 @@ export default function TcGeneratorCard({
                 setShowAddMenuDropdown(!showAddMenuDropdown);
                 setShowSampleDropdown(false);
               }}
-              className="inline-flex items-center gap-1 px-3.5 py-2 text-xs md:text-sm font-bold text-[#7C3AED] bg-white hover:bg-[#F3ECFB] border border-[#DDD0F5] rounded-2xl shadow-xs transition-colors cursor-pointer"
+              className="inline-flex items-center gap-1 px-3 py-1.5 sm:px-3.5 sm:py-2 text-xs sm:text-sm font-bold text-[#7C3AED] bg-white hover:bg-[#F3ECFB] border border-[#DDD0F5] rounded-xl sm:rounded-2xl shadow-xs transition-colors cursor-pointer"
               title="TC를 한 개 또는 다수로 추가하거나, 기존 목록에 CSV를 추가로 병합합니다"
             >
-              <PlusCircle className="w-4 h-4 text-[#8B5CF6]" />
+              <PlusCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#8B5CF6]" />
               <span>TC 추가</span>
               <ChevronDown className="w-3.5 h-3.5" />
             </button>
 
             {showAddMenuDropdown && (
-              <div className="absolute right-0 mt-1 w-52 bg-white border border-[#EADBF8] rounded-2xl shadow-xl z-30 py-1 text-xs animate-in fade-in zoom-in-95">
+              <div className="absolute right-0 mt-1 w-52 max-w-[calc(100vw-2rem)] bg-white border border-[#EADBF8] rounded-2xl shadow-xl z-30 py-1 text-xs animate-in fade-in zoom-in-95">
                 <button
                   type="button"
                   onClick={() => {
@@ -1099,12 +1099,12 @@ export default function TcGeneratorCard({
         </div>
       </div>
 
-      {/* 툴바: 일괄 작업 + 텍스트 요약/상세 토글 + 검색 */}
-      <div className="p-3 bg-[#FAF7FD] border-b border-[#ECE0F9] flex flex-wrap items-center justify-between gap-2.5 text-xs">
+      {/* 툴바: 일괄 작업 + 텍스트 요약/상세 토글 + 검색 (상하 패딩 최적화) */}
+      <div className="px-3 py-2 bg-[#FAF7FD] border-b border-[#ECE0F9] flex flex-wrap items-center justify-between gap-2 text-xs">
         {/* 일괄 처리 버튼 그룹 */}
-        <div className="flex items-center gap-2 flex-wrap">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
           {/* 1. 체크한 항목만 적용 */}
-          <div className="flex items-center gap-1.5 bg-white px-3 py-1.5 rounded-2xl border border-[#DDD0F5] shadow-2xs">
+          <div className="flex items-center gap-1 sm:gap-1.5 bg-white px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-2xl border border-[#DDD0F5] shadow-2xs">
             <span className="font-bold text-[#7C3AED] flex items-center gap-1">
               <CheckSquare className="w-3.5 h-3.5 text-[#8B5CF6]" />
               체크 {selectedIds.size}개:
@@ -1113,7 +1113,7 @@ export default function TcGeneratorCard({
               type="button"
               onClick={() => handleApplySelectedStatus('PASS')}
               disabled={selectedIds.size === 0}
-              className="px-2.5 py-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold shadow-xs disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+              className="px-2 py-0.5 sm:px-2.5 sm:py-1 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg sm:rounded-xl font-bold shadow-xs disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
               title={selectedIds.size === 0 ? '체크박스를 1개 이상 선택해주세요' : `선택한 ${selectedIds.size}개만 PASS 처리`}
             >
               선택 PASS
@@ -1122,7 +1122,7 @@ export default function TcGeneratorCard({
               type="button"
               onClick={() => handleApplySelectedStatus('Fail')}
               disabled={selectedIds.size === 0}
-              className="px-2.5 py-1 bg-[#D83664] hover:bg-[#C22552] text-white rounded-xl font-bold shadow-xs disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+              className="px-2 py-0.5 sm:px-2.5 sm:py-1 bg-[#D83664] hover:bg-[#C22552] text-white rounded-lg sm:rounded-xl font-bold shadow-xs disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
               title={selectedIds.size === 0 ? '체크박스를 1개 이상 선택해주세요' : `선택한 ${selectedIds.size}개만 Fail 처리`}
             >
               선택 Fail
@@ -1131,7 +1131,7 @@ export default function TcGeneratorCard({
               type="button"
               onClick={() => handleApplySelectedStatus('Blocker')}
               disabled={selectedIds.size === 0}
-              className="px-2.5 py-1 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-700 hover:to-rose-800 text-white rounded-xl font-bold shadow-xs disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
+              className="px-2 py-0.5 sm:px-2.5 sm:py-1 bg-gradient-to-r from-red-600 to-rose-700 hover:from-red-700 hover:to-rose-800 text-white rounded-lg sm:rounded-xl font-bold shadow-xs disabled:opacity-30 disabled:cursor-not-allowed transition-all cursor-pointer"
               title={selectedIds.size === 0 ? '체크박스를 1개 이상 선택해주세요' : `선택한 ${selectedIds.size}개만 Blocker 처리`}
             >
               선택 Blocker
@@ -1140,7 +1140,7 @@ export default function TcGeneratorCard({
               type="button"
               onClick={handleDeleteSelected}
               disabled={selectedIds.size === 0}
-              className="px-2 py-1 text-[#D83664] hover:bg-[#FFEBF1] rounded-xl border border-[#FCD2DF] font-bold shadow-2xs disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center gap-0.5 cursor-pointer ml-0.5"
+              className="px-1.5 py-0.5 sm:px-2 sm:py-1 text-[#D83664] hover:bg-[#FFEBF1] rounded-lg sm:rounded-xl border border-[#FCD2DF] font-bold shadow-2xs disabled:opacity-30 disabled:cursor-not-allowed transition-colors flex items-center gap-0.5 cursor-pointer ml-0.5"
               title="선택한 항목 삭제"
             >
               <Trash2 className="w-3 h-3" />
@@ -1149,7 +1149,7 @@ export default function TcGeneratorCard({
           </div>
 
           {/* 2. 전체 일괄 적용 */}
-          <div className="flex items-center gap-1.5 bg-[#F3ECFB] px-3 py-1.5 rounded-2xl border border-[#DDD0F5] shadow-2xs">
+          <div className="flex items-center gap-1 sm:gap-1.5 bg-[#F3ECFB] px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-xl sm:rounded-2xl border border-[#DDD0F5] shadow-2xs">
             <span className="font-semibold text-[#7B6891]">
               전체 일괄:
             </span>
@@ -1157,7 +1157,7 @@ export default function TcGeneratorCard({
               type="button"
               onClick={() => handleApplyAllStatus('PASS')}
               disabled={tcList.length === 0 || selectedIds.size > 0}
-              className="px-2.5 py-1 bg-emerald-600/90 text-white rounded-xl font-bold hover:bg-emerald-700 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer"
+              className="px-2 py-0.5 sm:px-2.5 sm:py-1 bg-emerald-600/90 text-white rounded-lg sm:rounded-xl font-bold hover:bg-emerald-700 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer"
               title={selectedIds.size > 0 ? '체크된 항목이 있을 때는 [선택 PASS]를 사용하세요' : '전체 TC를 PASS로 일괄 변경'}
             >
               전체 PASS
@@ -1166,7 +1166,7 @@ export default function TcGeneratorCard({
               type="button"
               onClick={() => handleApplyAllStatus('Fail')}
               disabled={tcList.length === 0 || selectedIds.size > 0}
-              className="px-2.5 py-1 bg-[#D83664] text-white rounded-xl font-bold hover:bg-[#B91C47] disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer"
+              className="px-2 py-0.5 sm:px-2.5 sm:py-1 bg-[#D83664] text-white rounded-lg sm:rounded-xl font-bold hover:bg-[#B91C47] disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer"
               title={selectedIds.size > 0 ? '체크된 항목이 있을 때는 [선택 Fail]을 사용하세요' : '전체 TC를 Fail로 일괄 변경'}
             >
               전체 Fail
@@ -1175,7 +1175,7 @@ export default function TcGeneratorCard({
               type="button"
               onClick={() => handleApplyAllStatus('Blocker')}
               disabled={tcList.length === 0 || selectedIds.size > 0}
-              className="px-2.5 py-1 bg-rose-800 text-white rounded-xl font-bold hover:bg-rose-900 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer"
+              className="px-2 py-0.5 sm:px-2.5 sm:py-1 bg-rose-800 text-white rounded-lg sm:rounded-xl font-bold hover:bg-rose-900 disabled:opacity-35 disabled:cursor-not-allowed transition-all cursor-pointer"
               title={selectedIds.size > 0 ? '체크된 항목이 있을 때는 [선택 Blocker]를 사용하세요' : '전체 TC를 Blocker로 일괄 변경'}
             >
               전체 Blocker
@@ -1237,9 +1237,9 @@ export default function TcGeneratorCard({
         </div>
       </div>
 
-      {/* 대용량 테이블 영역: Fixed Header + 내부 스크롤 (max-h-[600px]) */}
-      <div className="flex-1 overflow-x-auto relative">
-        <div className="max-h-[600px] overflow-y-auto">
+      {/* 대용량 테이블 영역: Fixed Header + 내부 스크롤 (헤더 sticky 고정 및 표 영역 가로 스크롤) */}
+      <div className="flex-1 overflow-x-auto relative w-full">
+        <div className="max-h-[620px] overflow-y-auto w-full">
           {filteredList.length === 0 ? (
             <div className="py-24 text-center text-[#AFA1BF] flex flex-col items-center justify-center">
               <div className="w-16 h-16 rounded-3xl bg-[#F3ECFB] border border-[#DDD0F5] flex items-center justify-center mb-3 shadow-xs">
@@ -1252,8 +1252,8 @@ export default function TcGeneratorCard({
             </div>
           ) : (
             <table className="w-full text-left border-collapse text-xs">
-              {/* 고정 헤더 */}
-              <thead className="bg-[#F6EFFC] sticky top-0 z-10 border-b border-[#EBDFF8] text-[#5B3D7E] font-bold text-[11px] tracking-wider">
+              {/* 고정 헤더: 스크롤해도 상단에 sticky 고정 */}
+              <thead className="bg-[#F6EFFC] sticky top-0 z-20 border-b border-[#EBDFF8] text-[#5B3D7E] font-bold text-[11px] tracking-wider shadow-2xs">
                 <tr>
                   <th className="py-2.5 px-2 w-10 text-center">
                     <input
@@ -1271,7 +1271,7 @@ export default function TcGeneratorCard({
                   <th className="py-2.5 px-2.5 min-w-[190px]">실제 결과 (자동 판정)</th>
                   <th className="py-2.5 px-2 w-20 text-center">상태</th>
                   <th className="py-2.5 px-2 w-24 text-center">결함 우선순위</th>
-                  <th className="py-2.5 px-2.5 min-w-[200px] text-center sticky right-0 bg-[#F1E7F8] shadow-l">
+                  <th className="py-2.5 px-2.5 min-w-[220px] text-center sticky right-0 bg-[#F1E7F8] shadow-l z-20">
                     실행 Action / 관리
                   </th>
                 </tr>
@@ -1446,8 +1446,8 @@ export default function TcGeneratorCard({
                         </div>
                       </td>
 
-                      {/* 액션 버튼 [PASS], [Fail], [Blocker] + 수정/삭제 */}
-                      <td className="py-2 px-2.5 text-center whitespace-nowrap sticky right-0 bg-white/95 backdrop-blur-xs shadow-l align-top">
+                      {/* 액션 버튼 [PASS], [Fail], [Blocker] + 수정/삭제 (폭 확보 및 sticky 고정) */}
+                      <td className="py-2 px-2.5 text-center whitespace-nowrap sticky right-0 bg-white/95 backdrop-blur-xs shadow-l align-top min-w-[220px] z-10">
                         <div className="flex items-center justify-center gap-1">
                           <button
                             type="button"
