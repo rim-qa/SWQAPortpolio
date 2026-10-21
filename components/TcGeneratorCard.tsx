@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Papa from 'papaparse';
 import { 
   Upload, 
@@ -80,9 +80,63 @@ export default function TcGeneratorCard({
   });
   const [bulkCsvText, setBulkCsvText] = useState<string>('');
 
-  // 샘플 데이터 선택 드롭다운 상태
+  // 샘플 데이터 선택 드롭다운 상태 및 Ref
   const [showSampleDropdown, setShowSampleDropdown] = useState<boolean>(false);
   const [showAddMenuDropdown, setShowAddMenuDropdown] = useState<boolean>(false);
+  const sampleDropdownRef = useRef<HTMLDivElement>(null);
+  const addMenuDropdownRef = useRef<HTMLDivElement>(null);
+
+  // 드래그 앤 드롭 업로드 상태
+  const [isDragging, setIsDragging] = useState<boolean>(false);
+  const dragCounterRef = useRef<number>(0);
+
+  // 1. "TC 추가" 및 "샘플 CSV 로드" 드롭다운 바깥 클릭 / ESC 키 닫기 이벤트 핸들러
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      if (
+        showAddMenuDropdown &&
+        addMenuDropdownRef.current &&
+        !addMenuDropdownRef.current.contains(e.target as Node)
+      ) {
+        setShowAddMenuDropdown(false);
+      }
+      if (
+        showSampleDropdown &&
+        sampleDropdownRef.current &&
+        !sampleDropdownRef.current.contains(e.target as Node)
+      ) {
+        setShowSampleDropdown(false);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowAddMenuDropdown(false);
+        setShowSampleDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showAddMenuDropdown, showSampleDropdown]);
+
+  // 4. 브라우저 전체 영역에 파일 드롭 시 페이지 이동 방지
+  useEffect(() => {
+    const preventDefaults = (e: DragEvent) => {
+      e.preventDefault();
+    };
+    window.addEventListener('dragover', preventDefaults);
+    window.addEventListener('drop', preventDefaults);
+    return () => {
+      window.removeEventListener('dragover', preventDefaults);
+      window.removeEventListener('drop', preventDefaults);
+    };
+  }, []);
 
   // 테이블 텍스트 펼치기/접기 모드 (기본: 요약형 컴팩트 뷰)
   const [isExpandedAll, setIsExpandedAll] = useState<boolean>(false);
@@ -96,6 +150,182 @@ export default function TcGeneratorCard({
     if (next.has(id)) next.delete(id);
     else next.add(id);
     setExpandedRowIds(next);
+  };
+
+  // 2. 유효하지 않은 CSV 업로드 차단 및 정상 CSV 처리 공통 함수
+  const processRequirementCsvFile = (file: File, isAppend = false) => {
+    // 2-1. .csv가 아닌 파일 차단
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      alert('CSV 파일만 업로드할 수 있습니다.');
+      return;
+    }
+
+    // 2-2. 파일이 비어 있음 (0바이트) 차단
+    if (file.size === 0) {
+      alert('CSV 파일에 내용이 없습니다.');
+      return;
+    }
+
+    setIsParsing(true);
+    const reader = new FileReader();
+
+    reader.onload = (e) => {
+      const text = (e.target?.result as string) || '';
+      // 2-2. 공백만 있는 파일 차단
+      if (!text.trim()) {
+        alert('CSV 파일에 내용이 없습니다.');
+        setIsParsing(false);
+        return;
+      }
+
+      Papa.parse<RawRequirementRow>(text, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          const rawFields = results.meta.fields || [];
+          const cleanFields = rawFields.map((f) => f.trim().replace(/^\uFEFF/, ''));
+
+          // 2-4. 필수 컬럼 확인 (요구사항과 관련 없는 CSV 차단)
+          // 기존 필수 컬럼 목록: 요구사항 ID, 대분류, 기능명, 요구사항 상세 내용, 수용 조건 (Acceptance Criteria), 우선순위
+          const hasReqId = cleanFields.some((f) => ['요구사항 ID', 'ID', 'reqId'].includes(f));
+          const hasCategory = cleanFields.some((f) => ['대분류', '카테고리'].includes(f));
+          const hasFeature = cleanFields.some((f) => ['기능명', '기능'].includes(f));
+          const hasDetail = cleanFields.some((f) => ['요구사항 상세 내용', '상세설명', '설명'].includes(f));
+          const hasAcceptance = cleanFields.some((f) => ['수용 조건 (Acceptance Criteria)', '수용조건', '수용 조건'].includes(f));
+          const hasPriority = cleanFields.some((f) => ['우선순위', 'Priority'].includes(f));
+
+          // 요구사항 CSV 판정: 최소한 기능명 또는 상세내용이 있고, 요구사항 관련 헤더가 포함되어야 함
+          const isRequirementCsv = (hasFeature || hasDetail) && (hasReqId || hasCategory || hasAcceptance || hasPriority);
+
+          if (!isRequirementCsv) {
+            alert('요구사항 CSV 형식이 아닙니다. 필수 컬럼: 요구사항 ID, 대분류, 기능명, 요구사항 상세 내용, 수용 조건 (Acceptance Criteria), 우선순위');
+            setIsParsing(false);
+            return;
+          }
+
+          const rawRows = results.data;
+          // 2-3. 헤더만 있고 데이터 행이 없는 경우 차단
+          if (!rawRows || rawRows.length === 0) {
+            alert('요구사항 데이터가 없습니다.');
+            setIsParsing(false);
+            return;
+          }
+
+          // 2-5 & 2-6. 빈 행 필터링 및 유효 행 추출
+          const validRows: RawRequirementRow[] = [];
+          let emptyRowCount = 0;
+
+          rawRows.forEach((row) => {
+            const values = Object.values(row)
+              .map((v) => String(v ?? '').trim())
+              .filter(Boolean);
+
+            if (values.length === 0) {
+              emptyRowCount++;
+              return;
+            }
+
+            const feature = (row['기능명'] || row['기능'] || '').trim();
+            const detail = (row['요구사항 상세 내용'] || row['상세설명'] || row['설명'] || '').trim();
+            if (!feature && !detail) {
+              emptyRowCount++;
+              return;
+            }
+
+            validRows.push(row);
+          });
+
+          // 모든 행의 요구사항 내용이 비어 있음
+          if (validRows.length === 0) {
+            alert('유효한 요구사항이 없습니다.');
+            setIsParsing(false);
+            return;
+          }
+
+          // 일부 행만 비어 있으면 유효한 행으로만 TC를 생성하고 안내
+          if (emptyRowCount > 0) {
+            alert(`${emptyRowCount}개 행은 내용이 없어 제외했습니다.`);
+          }
+
+          if (isAppend) {
+            let maxIndex = 0;
+            tcList.forEach((t) => {
+              const num = parseInt(t.id.replace(/[^0-9]/g, ''), 10);
+              if (!isNaN(num) && num > maxIndex) maxIndex = num;
+            });
+
+            const newTCs = generateTestCasesFromRequirements(validRows).map((tc, idx) => ({
+              ...tc,
+              id: `TC-${String(maxIndex + 1 + idx).padStart(3, '0')}`,
+            }));
+
+            onUpdateTcList([...tcList, ...newTCs]);
+            alert(`${newTCs.length}개의 테스트 케이스가 기존 목록에 성공적으로 추가되었습니다.`);
+          } else {
+            setFileName(file.name);
+            const generatedTCs = generateTestCasesFromRequirements(validRows);
+            onUpdateTcList(generatedTCs);
+            setSelectedIds(new Set());
+            setExpandedRowIds(new Set());
+          }
+          setIsParsing(false);
+        },
+        error: () => {
+          alert('CSV 파일 파싱 중 오류가 발생했습니다.');
+          setIsParsing(false);
+        },
+      });
+    };
+
+    reader.onerror = () => {
+      alert('파일을 읽는 도중 오류가 발생했습니다.');
+      setIsParsing(false);
+    };
+
+    reader.readAsText(file, 'utf-8');
+  };
+
+  // 4. 드래그 앤 드롭 이벤트 핸들러
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current++;
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current--;
+    if (dragCounterRef.current <= 0) {
+      dragCounterRef.current = 0;
+      setIsDragging(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'copy';
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounterRef.current = 0;
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (!files || files.length === 0) return;
+
+    if (files.length > 1) {
+      alert('CSV 파일은 한 번에 1개만 업로드할 수 있습니다.');
+      return;
+    }
+
+    processRequirementCsvFile(files[0], false);
   };
 
   // 샘플 데이터 CSV 로드 핸들러 (정적 CSV 파일 로드)
@@ -141,31 +371,7 @@ export default function TcGeneratorCard({
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    setFileName(file.name);
-    setIsParsing(true);
-
-    Papa.parse<RawRequirementRow>(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        const rows = results.data;
-        if (rows && rows.length > 0) {
-          const generatedTCs = generateTestCasesFromRequirements(rows);
-          onUpdateTcList(generatedTCs);
-          setSelectedIds(new Set());
-          setExpandedRowIds(new Set());
-        } else {
-          alert('CSV 파일에 유효한 데이터 행이 없습니다.');
-        }
-        setIsParsing(false);
-      },
-      error: () => {
-        alert('CSV 파일 파싱 중 오류가 발생했습니다.');
-        setIsParsing(false);
-      },
-    });
-
+    processRequirementCsvFile(file, false);
     if (e.target) e.target.value = '';
   };
 
@@ -173,39 +379,7 @@ export default function TcGeneratorCard({
   const handleAppendFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-
-    setIsParsing(true);
-
-    Papa.parse<RawRequirementRow>(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (results) => {
-        const rows = results.data;
-        if (rows && rows.length > 0) {
-          let maxIndex = 0;
-          tcList.forEach((t) => {
-            const num = parseInt(t.id.replace(/[^0-9]/g, ''), 10);
-            if (!isNaN(num) && num > maxIndex) maxIndex = num;
-          });
-
-          const newTCs = generateTestCasesFromRequirements(rows).map((tc, idx) => ({
-            ...tc,
-            id: `TC-${String(maxIndex + 1 + idx).padStart(3, '0')}`,
-          }));
-
-          onUpdateTcList([...tcList, ...newTCs]);
-          alert(`${newTCs.length}개의 테스트 케이스가 기존 목록에 성공적으로 추가되었습니다.`);
-        } else {
-          alert('CSV 파일에 유효한 데이터 행이 없습니다.');
-        }
-        setIsParsing(false);
-      },
-      error: () => {
-        alert('CSV 파일 파싱 중 오류가 발생했습니다.');
-        setIsParsing(false);
-      },
-    });
-
+    processRequirementCsvFile(file, true);
     if (e.target) e.target.value = '';
   };
 
@@ -786,7 +960,7 @@ export default function TcGeneratorCard({
 
         {/* 파일 업로드 & 샘플 데이터 로드 드롭다운 */}
         <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-          <div className="relative">
+          <div ref={sampleDropdownRef} className="relative">
             <button
               type="button"
               onClick={() => setShowSampleDropdown(!showSampleDropdown)}
@@ -902,7 +1076,7 @@ export default function TcGeneratorCard({
           </button>
 
           {/* TC 추가 (한 개 / 다수 / CSV 추가) 드롭다운 */}
-          <div className="relative">
+          <div ref={addMenuDropdownRef} className="relative">
             <button
               type="button"
               onClick={() => {
@@ -1300,13 +1474,37 @@ export default function TcGeneratorCard({
       </div>
 
       {/* 대용량 테이블 영역: Fixed Header + 내부 스크롤 (헤더 sticky 고정 및 표 영역 가로 스크롤) */}
-      <div className="flex-1 overflow-x-auto relative w-full">
+      <div
+        onDragOver={handleDragOver}
+        onDragEnter={handleDragEnter}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className="flex-1 overflow-x-auto relative w-full"
+      >
+        {/* 4. 드래그 앤 드롭 점선 테두리 오버레이 안내 */}
+        {isDragging && (
+          <div className="absolute inset-0 z-30 bg-[#FAF7FD]/90 backdrop-blur-xs border-2 border-dashed border-[#8B5CF6] rounded-2xl m-2 flex flex-col items-center justify-center pointer-events-none transition-all animate-in fade-in zoom-in-95">
+            <div className="w-16 h-16 rounded-3xl bg-[#F3ECFB] border border-[#DDD0F5] flex items-center justify-center mb-3 shadow-md animate-bounce">
+              <Upload className="w-8 h-8 text-[#7C3AED]" />
+            </div>
+            <p className="text-base font-bold text-[#2E1A47]">여기에 요구사항 CSV를 놓으세요</p>
+            <p className="text-xs text-[#7B6891] mt-1">파일을 놓으면 즉시 테스트 케이스가 자동 생성됩니다 ✨</p>
+          </div>
+        )}
+
         <div className="max-h-[620px] overflow-y-auto w-full">
           {filteredList.length === 0 ? (
             <div className="py-24 text-center text-[#AFA1BF] flex flex-col items-center justify-center">
-              <div className="w-16 h-16 rounded-3xl bg-[#F3ECFB] border border-[#DDD0F5] flex items-center justify-center mb-3 shadow-xs">
-                <Upload className="w-8 h-8 text-[#8B5CF6] stroke-1.5" />
-              </div>
+              {/* 3. 빈 화면 업로드 아이콘 버튼 연결 */}
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isParsing}
+                className="w-16 h-16 rounded-3xl bg-[#F3ECFB] hover:bg-[#EBDDF9] border border-[#DDD0F5] hover:border-[#8B5CF6] flex items-center justify-center mb-3 shadow-xs transition-all cursor-pointer group"
+                title="클릭하여 요구사항 CSV 파일을 업로드합니다"
+              >
+                <Upload className="w-8 h-8 text-[#8B5CF6] group-hover:scale-110 transition-transform stroke-1.5" />
+              </button>
               <p className="text-base font-bold text-[#2E1A47]">등록된 테스트 케이스가 없습니다 ✨</p>
               <p className="text-xs text-[#7B6891] mt-1.5">
                 상단의 <strong>[샘플 요구사항 CSV 자동 로드]</strong>에서 20개 또는 48개 빠른 샘플을 불러와보세요.
